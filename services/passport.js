@@ -21,27 +21,18 @@ passport.use(
         clientSecret: keys.googleClientSecret,
         callbackURL: '/auth/google/callback',
         proxy: true
-    }, (accessToken, refreshToken, profile, done) => {
+    },  
+    async (accessToken, refreshToken, profile, done) => {
         //Verifica se ja tem um usuário com id cadastrado
-        User.findOne({ googleId: profile.id })
-            .then((existingUser) => {
-                if (existingUser){
-                    //Temos um record with given profile ID
-                    done(null, existingUser);
-                }else{
-                    //Create new user porque não tem profile com este ID
-                    //Cria o model instance e salva no DB
-                    new User({ googleId: profile.id }).save()
-                        .then(user => done(null, user))
-                        .catch((error) => {
-                            console.log(error);
-                        });;
-                }
-            }).catch((error) => {
-                console.log(error);
-            });
-
-
-        
+        const existingUser = await User.findOne({ googleId: profile.id });
+           
+        if (existingUser){
+            //Temos um record with given profile ID
+            return done(null, existingUser);
+        }        
+        //Create new user porque não tem profile com este ID
+        //Cria o model instance e salva no DB
+        const user = await new User({ googleId: profile.id }).save();
+        done(null, user);        
     })
 );
